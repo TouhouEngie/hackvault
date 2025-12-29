@@ -1,47 +1,33 @@
-import scrypt
-import base64
 import sys
-import os
-
-def encryptPassword(password):
-    resources = open('passwords.txt', 'ab')
-    encryptedPassword = scrypt.encrypt(password, masterPassword, maxtime = 0.05)
-    resources.write(base64.b64encode(encryptedPassword))
-    resources.write(b"\n")
-    print("Encrypted password saved.")
-    resources.close()
-
-def decryptPassword():
-    resources = open('passwords.txt', 'r')
-    for line in resources:
-        encryptedPassword = line.strip()
-        encryptedPassword = base64.b64decode(encryptedPassword)
-        try:
-            password = scrypt.decrypt(encryptedPassword, masterPassword, force=True)
-            print(password)
-        except scrypt.error:
-            print("Incorrect password")
-            break
-    resources.close()
+import password
 
 while True:
     masterPassword = input("Enter your master password: ")
-    if (masterPassword != ""):
+    if password.checkHashedMasterPassword(masterPassword) == "invalid":
+        password.hashMasterPassword(masterPassword)
+    elif password.checkHashedMasterPassword(masterPassword) == "false":
+        print("incorrect password")
+        continue
+    else:
         break
 
 while True:
     print("1. Encrypt a password...")
     print("2. Decrypt all passwords...")
-    print("3. Change inputted master password...")
+    print("3. Generate a random password...")
     print("4. Exit...")
     selection = input("Enter a selection: ")
     if (selection == "1"):
-        pw = input("Enter a password you want to encrypt: ")
-        encryptPassword(pw)
+        pw = input("Enter a password you want to encrypt (blank for a randomly generated password): ")
+        if (pw == ""):
+            pw = password.generateRandomPassword(12)
+            print('Your randomly generated password is: ' + pw)
+        site = input("Enter the URL of the website you want to use the password for: ")
+        password.encryptPassword(pw, site)
     elif (selection == "2"):
-        decryptPassword()
+        password.decryptPassword()
     elif (selection == "3"):
-        masterPassword = input("Enter your master password: ")
+        print(password.generateRandomPassword(12))
     elif (selection == "4"):
         sys.exit()
     else:
